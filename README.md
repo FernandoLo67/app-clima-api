@@ -103,7 +103,16 @@ No es por evitar Gson o Jackson por gusto: es que **Maven Central no es accesibl
 
 `Json.buscar(raiz, "results.0.latitude")` navega por rutas con puntos e indices, que es lo unico que hace falta para leer una respuesta de API sin generar clases.
 
-## Las 48 pruebas
+## Cache LRU con TTL
+
+`CacheClima` evita repetir consultas a la API para la misma ciudad. Es un cache en memoria con dos limites:
+
+- **Capacidad maxima** (LRU): cuando se llena, expulsa la ciudad menos consultada recientemente. Implementado con `LinkedHashMap` en modo access-order, que reordena las entradas en cada `get`.
+- **Tiempo de vida** (TTL): cada entrada expira despues de un tiempo configurable. Las claves se normalizan a minusculas y sin espacios extremos, asi `" Buenos Aires "` y `"buenos aires"` son la misma consulta.
+
+La combinacion resuelve los dos problemas clasicos de un cache: que crezca sin limite y que devuelva datos viejos. Un TTL de 10 minutos es razonable para el clima — no cambia cada segundo, pero tampoco es estatico.
+
+## Las 57 pruebas
 
 **`JsonTest` (27)**
 
@@ -127,12 +136,14 @@ src/main/java/com/fernando/clima/
 ├── ClimaException.java  Lo unico que sale de la fachada.
 ├── Ciudad.java          Record; se construye desde el JSON de geocodificacion.
 ├── Clima.java           Record; codigos WMO y conversion a Fahrenheit.
+├── CacheClima.java      LRU con TTL, LinkedHashMap en access-order.
 ├── ClienteClima.java    HTTP con el cliente del JDK, inyectable.
 └── Main.java            Solo lee del teclado y escribe en pantalla.
 src/test/java/com/fernando/clima/
 ├── JsonTest.java          27 pruebas.
 ├── ClienteClimaTest.java  10 pruebas, sin tocar la red.
-└── ClimaTest.java         11 pruebas.
+├── ClimaTest.java         11 pruebas.
+└── CacheClimaTest.java     9 pruebas.
 ```
 
 ## Como ejecutar
