@@ -49,12 +49,13 @@ public class CacheClima {
     }
 
     public Optional<Clima> consultar(String ciudad) {
-        Entrada entrada = entradas.get(normalizar(ciudad));
+        String clave = normalizar(ciudad);
+        Entrada entrada = entradas.get(clave);
         if (entrada == null) {
             return Optional.empty();
         }
         if (reloj.getAsLong() - entrada.creadoEn > ttlMs) {
-            entradas.remove(normalizar(ciudad));
+            entradas.remove(clave);
             return Optional.empty();
         }
         return Optional.of(entrada.clima);
